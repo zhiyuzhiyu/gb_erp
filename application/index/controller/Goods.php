@@ -139,9 +139,9 @@ class Goods extends Base
                     $cursor['shop_cat_name'] = $v['proSort'];
                     $cursor['unit'] = $v['unit'];
                     $cursor['goods_xh'] = $v['cpxh'];
-                    $save =  http_post("http://app.cn/gb/goods/saveGoods",$cursor);
+                    $save =  http_post("https://zwcap.zhaowoce.com:4433/gb/goods/saveGoods",$cursor);  //
                     $data = json_decode($save,true);
-                    if($data['code'] == 0){
+                    if($data['code'] === "0"){
                         $this->service->editGoods($cursor['goods_id']);
                     }
                 }
