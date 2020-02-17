@@ -87,9 +87,10 @@ class Gbtcgroup extends Base
             $this->goodInCon($user_ord,$g_ord);
         }
         //添加合同
-        $address = $v['province_name'].$v['city_name'].$v['district_name'].$v['address'];
+        $address = $v['province_name'].$v['city_name'].$v['district_name'].$v['address']."    联系人：".$v['consignee']."    联系电话：".$v['mobile'];
         $money_paid = $v['money_paid'];
-        $this->addContract($user_ord,$consignee,$money_paid,$address);
+        $cateid = !empty($v['sale_number']) ? $v['sale_number'] : 84;
+        $this->addContract($user_ord,$consignee,$money_paid,$address,$cateid);
         return true;
     }
 
@@ -403,7 +404,7 @@ class Gbtcgroup extends Base
     }
 
     //添加合同
-    public  function addContract($user_ord = '',$consignee = '',$money_paid = '',$address = '',$htid = ''){
+    public  function addContract($user_ord = '',$consignee = '',$money_paid = '',$address = '',$htid = '',$cateid = 84){
 //        $user_ord = 7592;
 //        $consignee = '金码头测试用户';
 //        $money_paid = "0.00";
@@ -454,7 +455,7 @@ class Gbtcgroup extends Base
         $arr['date3'] = $today;         	/*签订日期*/
         $arr['date1'] = $today;         	/*开始日期*/
         $arr['date2'] = $end_date;         	/*结束日期*/
-        $arr['cateid'] = "0";                 /*销售人员*/
+        $arr['cateid'] = $cateid;                 /*销售人员*/
         $arr['person2id'] = '0';              /*对方代表*/
         $arr['sort'] = '192';                 /*合同分类*/
         $arr['complete1'] = '195';           	/*合同状态*/
@@ -516,7 +517,7 @@ class Gbtcgroup extends Base
                 if($message['text'] == '合同编号已被使用，不能保存！'){
                     $arr_n = explode('GB_',$htid);
                     $sn = 'GB_'.($arr_n[1]+1) ;
-                    $this->addContract($user_ord,$consignee,$money_paid,$address,$sn);
+                    $this->addContract($user_ord,$consignee,$money_paid,$address,$sn,$cateid);
                 };
             }
         }

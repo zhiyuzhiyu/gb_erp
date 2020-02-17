@@ -98,14 +98,17 @@ class Goods extends Base
         $table = (array)$source['table'];
 
         if(!empty( $table['rows'])){
+//            echo "<pre>";
+//            print_r($table['rows']);
+//            echo "</pre>";
             return $table['rows'];
         }else{
            return [];
         }
     }
 
-    //国标商品存入中间库
-    public function saveGoods(){
+    //国标商品存入中间库    733  774 //
+    public function saveGoods($page = 1){
         set_time_limit(0);
         $goods_num = $this->service->getGoodsNum();
         $page = floor($goods_num/20) + 1;
@@ -151,8 +154,9 @@ class Goods extends Base
 //            echo "</pre>";
         }else{
             echo "没有需要同步的商品了";
+            exit;
         }
-        exit;
+//        exit;
     }
 
 }
