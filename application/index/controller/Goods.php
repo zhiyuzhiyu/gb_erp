@@ -159,4 +159,62 @@ class Goods extends Base
 //        exit;
     }
 
+//以下暂时无用
+    //存储商品详情
+    public function saveGoodsDetail(){
+        //读取中间表 每次20个
+        $save =  http_post("https://zwcap.zhaowoce.com:4433/gb/goods/getGoodsList",array('page'=>20));  //
+        $data = json_decode($save,true);
+        if(!empty($data['data'])){
+            $list = $data['data'];
+            foreach($list as $k=>$goods_id){
+
+            }
+        }
+
+
+        echo "<pre>";
+        print_r($data);
+        echo "</pre>";
+        exit;
+    }
+
+    //获取商品详情
+    public function getGoodsDetail($goods_id = 8563){
+        $ch = curl_init();
+        $data = [
+            'session'=>$this->session,
+            'datas'=>[
+                ['id'=>'company','val'=>"0"],  	/*客户ID*/
+                ['id'=>'repairOrder','val'=>"0"],  /*维修单ID*/
+                ['id'=>'PID','val'=>""],  /**/
+                ['id'=>'ord','val'=>$goods_id],  	/*数据唯一标识*/
+
+                ['id'=>'unit','val'=>""],   	/**/
+                ['id'=>'from','val'=>""],    /**/
+                ['id'=>'_insert_rowindex','val'=>''],      /**/
+                ['id'=>'debug','val'=>'']    /**/
+            ]
+        ];
+        $json = json_encode($data);
+
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_URL, 'http://172.18.111.5/SYSA/mobilephone/salesmanage/product/billService.asp');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/zsml; charset=utf-8',	 /*接口规定content-type值必须为application/zsml。*/
+                'Content-Length: '.strlen($json))
+        );
+        ob_start();
+        curl_exec($ch);  /*输出返回结果*/
+        $b=ob_get_contents();
+        ob_end_clean();
+        $res = (array)json_decode($b);
+
+        echo "<pre>";
+        print_r($res);
+        echo "</pre>";
+        exit;
+    }
+
 }

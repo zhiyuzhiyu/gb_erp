@@ -60,7 +60,7 @@ class Gbtcgroup extends Base
     }
 
     //执行
-    public function addGbOrder($v){
+    public function addGbOrder($v = []){
         //判断商品是否存在
         $goods = $v['goods_info'];
         $goods_ords = [];
@@ -75,12 +75,23 @@ class Gbtcgroup extends Base
         }
 
         //判断用户
+        $user_cert = $v['user_cert'];
         $consignee = $v['consignee'];
         $user_mobile = $v['mobile'];
-        $user_ord = $this->userList($consignee);
-        if(empty($user_ord)){
-            //新建用户
-            $user_ord = $this->addUser($consignee,$user_mobile);
+        if($user_cert){
+            $user_ord = $this->userList($user_cert);
+            if(empty($user_ord)){
+                //新建用户
+                $user_ord = $this->addUser($user_cert,$user_mobile);
+            }
+            echo $user_ord;
+            exit;
+        }else{
+            $user_ord = $this->userList($consignee.$user_mobile);
+            if(empty($user_ord)){
+                //新建用户
+                $user_ord = $this->addUser($consignee.$user_mobile,$user_mobile);
+            }
         }
         //添加商品
         foreach($goods_ords as $g_k=>$g_ord){
@@ -90,7 +101,7 @@ class Gbtcgroup extends Base
         $address = $v['province_name'].$v['city_name'].$v['district_name'].$v['address']."    联系人：".$v['consignee']."    联系电话：".$v['mobile'];
         $money_paid = $v['money_paid'];
         $cateid = !empty($v['sale_number']) ? $v['sale_number'] : 84;
-        $this->addContract($user_ord,$consignee,$money_paid,$address,$cateid);
+        $this->addContract($user_ord,$consignee,$money_paid,$address,"",$cateid);
         return true;
     }
 
@@ -175,12 +186,15 @@ class Gbtcgroup extends Base
         $body = (array)$res['body'];
         $source = (array)$body['source'];
         $table = (array)$source['table'];
-
         if(!empty( $table['rows'])){
-            $ord = $table['rows'][0][7];
-        }else{
-            $ord = 0;
+            foreach($table['rows'] as $k=>$v){
+                if($v[0] == $name){
+                    $ord = $v[7];
+                    return $ord;
+                }
+            }
         }
+        $ord = 0;
         return $ord;
 //        echo $b;
     }
