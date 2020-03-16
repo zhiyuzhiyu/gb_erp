@@ -78,20 +78,21 @@ class Gbtcgroup extends Base
         $user_cert = $v['user_cert'];
         $consignee = $v['consignee'];
         $user_mobile = $v['mobile'];
+        $con_name = $user_cert ? $user_cert : $consignee.$user_mobile;
         if($user_cert){
             $user_ord = $this->userList($user_cert);
             if(empty($user_ord)){
                 //新建用户
                 $user_ord = $this->addUser($user_cert,$user_mobile);
             }
-            echo $user_ord;
-            exit;
+            $con_name = $user_cert;
         }else{
             $user_ord = $this->userList($consignee.$user_mobile);
             if(empty($user_ord)){
                 //新建用户
                 $user_ord = $this->addUser($consignee.$user_mobile,$user_mobile);
             }
+            $con_name = $consignee.$user_mobile;
         }
         //添加商品
         foreach($goods_ords as $g_k=>$g_ord){
@@ -101,7 +102,7 @@ class Gbtcgroup extends Base
         $address = $v['province_name'].$v['city_name'].$v['district_name'].$v['address']."    联系人：".$v['consignee']."    联系电话：".$v['mobile'];
         $money_paid = $v['money_paid'];
         $cateid = !empty($v['sale_number']) ? $v['sale_number'] : 84;
-        $this->addContract($user_ord,$consignee,$money_paid,$address,"",$cateid);
+        $this->addContract($user_ord,$con_name,$money_paid,$address,"",$cateid);
         return true;
     }
 
