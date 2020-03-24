@@ -68,7 +68,7 @@ class Gbtcgroup extends Base
             $goods_sn = $g_v['goods_sn'];
             $goods_ord = $this->goodsList($goods_sn);
             if(!empty($goods_ord)){
-                $goods_ords []= $goods_ord;
+                $goods_ords []= ['g_ord'=>$goods_ord,'g_num'=>$g_v['goods_number']];
             }else{
                 return false;
             }
@@ -80,23 +80,23 @@ class Gbtcgroup extends Base
         $user_mobile = $v['mobile'];
         $con_name = $user_cert ? $user_cert : $consignee.$user_mobile;
         if($user_cert){
+            $con_name = $user_cert;
             $user_ord = $this->userList($user_cert);
             if(empty($user_ord)){
                 //新建用户
                 $user_ord = $this->addUser($user_cert,$user_mobile);
             }
-            $con_name = $user_cert;
         }else{
+            $con_name = $consignee.$user_mobile;
             $user_ord = $this->userList($consignee.$user_mobile);
             if(empty($user_ord)){
                 //新建用户
                 $user_ord = $this->addUser($consignee.$user_mobile,$user_mobile);
             }
-            $con_name = $consignee.$user_mobile;
         }
         //添加商品
         foreach($goods_ords as $g_k=>$g_ord){
-            $this->goodInCon($user_ord,$g_ord);
+            $this->goodInCon($user_ord,$g_ord['g_ord'],$g_ord['g_num']);
         }
         //添加合同
         $address = $v['province_name'].$v['city_name'].$v['district_name'].$v['address']."    联系人：".$v['consignee']."    联系电话：".$v['mobile'];
@@ -156,8 +156,8 @@ class Gbtcgroup extends Base
             'cmdkey'=>'refresh',
             'datas'=>[
                 ['id'=>'datatype','val'=>''],
-                ['id'=>'stype','val'=>'1'],
-                ['id'=>'remind','val'=>'147'],
+                ['id'=>'stype','val'=>''],
+                ['id'=>'remind','val'=>''],
                 ['id'=>'name','val'=>$name],  //判断用户是否存在  南京正三角化学试剂有限公司
                 ['id'=>'tjly','val'=>''],
                 ['id'=>'tdate1','val'=>''],
@@ -165,7 +165,7 @@ class Gbtcgroup extends Base
                 ['id'=>'checktype','val'=>'radio'],
                 ['id'=>'telsort','val'=>''],
                 ['id'=>'a_cateid','val'=>''],
-                ['id'=>'catetype','val'=>'1'],
+                ['id'=>'catetype','val'=>''],
                 ['id'=>'pagesize','val'=>'20'],
                 ['id'=>'pageindex','val'=>'1']
             ]
@@ -187,12 +187,31 @@ class Gbtcgroup extends Base
         $body = (array)$res['body'];
         $source = (array)$body['source'];
         $table = (array)$source['table'];
+        if(!empty($table['cols'])){
+            foreach($table['cols'] as $k=>$v){
+                $_valve = (array)$v;
+                if($_valve['id'] == 'name'){
+                    $v_name_k = $k;
+                }
+                if($_valve['id'] == 'ord'){
+                    $v_ord_k = $k;
+                }
+            }
+        }
         if(!empty( $table['rows'])){
             foreach($table['rows'] as $k=>$v){
-                if($v[0] == $name){
-                    $ord = $v[7];
-                    return $ord;
+                if(isset($v_name_k) && isset($v_ord_k)){
+                    if($v[$v_name_k] == $name){
+                        $ord = $v[$v_ord_k];
+                        return $ord;
+                    }
+                }else{
+                    if($v[0] == $name){
+                        $ord = $v[9];
+                        return $ord;
+                    }
                 }
+
             }
         }
         $ord = 0;
@@ -247,7 +266,10 @@ class Gbtcgroup extends Base
     {
 //        $name = "金码头测试1";
 //        $mobile = "17633312736";
-        $new_ord = self::newOrd();
+        $new_ord = [];
+        while(empty($new_ord['ord'])){
+            $new_ord = self::newOrd();
+        }
         $ch = curl_init();
 
         $arr = [];
@@ -312,6 +334,11 @@ class Gbtcgroup extends Base
         curl_exec($ch);  /*输出返回结果*/
         $b=ob_get_contents();
         ob_end_clean();
+        $res = (array)json_decode($b);
+        $header = (array)$res['header'];
+        if(!(!empty($header) && $header['status'] == 0)){
+            return self::addUser($name,$mobile);
+        }
         $res = self::zhipai($new_ord['ord']);
         return $new_ord['ord'];
     }
@@ -455,7 +482,7 @@ class Gbtcgroup extends Base
         }
         $end_date =  $year."-".$month."-".$day;
 
-        if($htid == ""){
+        while($htid == ""){
             $htid = $this->contractList();
         }
 
@@ -539,9 +566,10 @@ class Gbtcgroup extends Base
     }
 
     //产品存入合同
-    public function goodInCon($user_ord,$goods_ord){
+    public function goodInCon($user_ord,$goods_ord,$num1){
         $ch = curl_init();
         $arr['ord'] = $goods_ord;
+//        $arr['num1'] = $num1;
         $arr['company'] = $user_ord;
         foreach($arr as $k=>$v){
             $datas[] = ['id'=>$k,'val'=>$v];
