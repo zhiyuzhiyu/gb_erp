@@ -78,20 +78,28 @@ class Gbtcgroup extends Base
         $user_cert = $v['user_cert'];
         $consignee = $v['consignee'];
         $user_mobile = $v['mobile'];
-        $con_name = $user_cert ? $user_cert : $consignee.$user_mobile;
+        $con_name = $user_cert ? $user_cert : $consignee;
         if($user_cert){
             $con_name = $user_cert;
-            $user_ord = $this->userList($user_cert);
-            if(empty($user_ord)){
+            $user_ord_json = $this->userList($user_cert,$user_mobile);
+            if(empty($user_ord_json)){
                 //新建用户
                 $user_ord = $this->addUser($user_cert,$user_mobile);
+            }else{
+                $user_ord_arr = json_decode($user_ord_json,true);
+                $user_ord = $user_ord_arr['ord'];
+                $con_name = $user_ord_arr['name'];
             }
         }else{
-            $con_name = $consignee.$user_mobile;
-            $user_ord = $this->userList($consignee.$user_mobile);
-            if(empty($user_ord)){
+            $con_name = $consignee;
+            $user_ord_json = $this->userList($consignee,$user_mobile);
+            if(empty($user_ord_json)){
                 //新建用户
-                $user_ord = $this->addUser($consignee.$user_mobile,$user_mobile);
+                $user_ord = $this->addUser($consignee,$user_mobile);
+            }else{
+                $user_ord_arr = json_decode($user_ord_json,true);
+                $user_ord = $user_ord_arr['ord'];
+                $con_name = $user_ord_arr['name'];
             }
         }
         //添加商品
@@ -147,8 +155,8 @@ class Gbtcgroup extends Base
 
 
     //获取客户列表
-    public function userList($name = ""){
-//        $name = '金码头测试1' ;   //用户名
+    public function userList($name = "",$mobile = ''){
+//        $name = '金码头测试' ;   //用户名
 //        $mobile = '17633312736';
         $ch = curl_init();
         $data = [
@@ -196,26 +204,45 @@ class Gbtcgroup extends Base
                 if($_valve['id'] == 'ord'){
                     $v_ord_k = $k;
                 }
+                if($_valve['id'] == 'mobile'){
+                    $v_mob_k = $k;
+                }
             }
         }
         if(!empty( $table['rows'])){
             foreach($table['rows'] as $k=>$v){
-                if(isset($v_name_k) && isset($v_ord_k)){
+                if(isset($v_name_k) && isset($v_ord_k) && isset($v_mob_k)){
+                    if($v[$v_mob_k] == $mobile){
+                        $_arr['ord'] = $v[$v_ord_k];
+                        $_arr['name'] = $v[$v_name_k];
+                        return json_encode($_arr,JSON_UNESCAPED_UNICODE);
+//                        return $ord;
+                    }
                     if($v[$v_name_k] == $name){
-                        $ord = $v[$v_ord_k];
-                        return $ord;
+                        $_arr['ord'] = $v[$v_ord_k];
+                        $_arr['name'] = $v[$v_name_k];
+                        return json_encode($_arr,JSON_UNESCAPED_UNICODE);
+//                        return $ord;
                     }
                 }else{
+                    if($v[7] == $mobile){
+                        $_arr['ord'] = $v[9];
+                        $_arr['name'] = $v[$v_name_k];
+                        return json_encode($_arr,JSON_UNESCAPED_UNICODE);
+//                        return $ord;
+                    }
                     if($v[0] == $name){
-                        $ord = $v[9];
-                        return $ord;
+                        $_arr['ord'] = $v[9];
+                        $_arr['name'] = $v[$v_name_k];
+                        return json_encode($_arr,JSON_UNESCAPED_UNICODE);
+//                        return $ord;
                     }
                 }
 
             }
         }
         $ord = 0;
-        return $ord;
+        return "";
 //        echo $b;
     }
 
