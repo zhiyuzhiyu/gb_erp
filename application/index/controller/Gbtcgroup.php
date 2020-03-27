@@ -569,7 +569,7 @@ class Gbtcgroup extends Base
     public function goodInCon($user_ord,$goods_ord,$num1){
         $ch = curl_init();
         $arr['ord'] = $goods_ord;
-//        $arr['num1'] = $num1;
+        $arr['num1'] = $num1;
         $arr['company'] = $user_ord;
         foreach($arr as $k=>$v){
             $datas[] = ['id'=>$k,'val'=>$v];
